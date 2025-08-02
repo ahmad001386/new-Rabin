@@ -1,4 +1,4 @@
-import { executeQuery } from './database';
+import { supabase, supabaseAdmin } from './database';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -39,16 +39,26 @@ export function verifyToken(token: string): any {
   }
 }
 
-// Login user
+// Login user with Supabase
 export async function loginUser(email: string, password: string) {
   try {
-    // Find user by email
-    const users = await executeQuery(
-      'SELECT id, name, email, password_hash, role, status FROM users WHERE email = ? AND status = "active"',
-      [email]
-    );
+    // Find user by email using Supabase
+    const { data: users, error } = await supabase
+      .from('users')
+      .select('id, name, email, password_hash, role, status')
+      .eq('email', email)
+      .eq('status', 'active')
+      .limit(1);
 
-    if (users.length === 0) {
+    if (error) {
+      console.error('Supabase error:', error);
+      return {
+        success: false,
+        message: 'خطای سرور داخلی'
+      };
+    }
+
+    if (!users || users.length === 0) {
       return {
         success: false,
         message: 'کاربر یافت نشد یا غیرفعال است'
@@ -74,11 +84,15 @@ export async function loginUser(email: string, password: string) {
       role: user.role
     });
 
-    // Update last login
-    await executeQuery(
-      'UPDATE users SET last_login = NOW() WHERE id = ?',
-      [user.id]
-    );
+    // Update last login using Supabase
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ last_login: new Date().toISOString() })
+      .eq('id', user.id);
+
+    if (updateError) {
+      console.error('Failed to update last login:', updateError);
+    }
 
     return {
       success: true,
@@ -103,4 +117,66 @@ export async function loginUser(email: string, password: string) {
 // Check permissions
 export function hasPermission(userRole: string, allowedRoles: string[]): boolean {
   return allowedRoles.includes(userRole);
+}
+
+// Sign up user with Supabase Auth (optional - if you want to use Supabase Auth)
+export async function signUpWithSupabase(email: string, password: string, userData: any) {
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: userData
+      }
+    });
+
+    if (error) {
+      return {
+        success: false,
+        message: error.message
+      };
+    }
+
+    return {
+      success: true,
+      message: 'ثبت‌نام با موفقیت انجام شد',
+      user: data.user
+    };
+  } catch (error) {
+    console.error('Signup error:', error);
+    return {
+      success: false,
+      message: 'خطای سرور داخلی'
+    };
+  }
+}
+
+// Sign in with Supabase Auth (optional)
+export async function signInWithSupabase(email: string, password: string) {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      return {
+        success: false,
+        message: error.message
+      };
+    }
+
+    return {
+      success: true,
+      message: 'ورود با موفقیت انجام شد',
+      user: data.user,
+      session: data.session
+    };
+  } catch (error) {
+    console.error('Signin error:', error);
+    return {
+      success: false,
+      message: 'خطای سرور داخلی'
+    };
+  }
 }
