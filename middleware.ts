@@ -28,11 +28,13 @@ export async function middleware(request: NextRequest) {
   if (
     pathname.startsWith('/_next') ||
     pathname.startsWith('/api/auth') ||
+    pathname.startsWith('/api/migrate') ||
     pathname.startsWith('/public') ||
     pathname === '/login' ||
     pathname === '/favicon.ico' ||
     pathname === '/' ||
-    pathname === '/test-audio' // Add test page exception
+    pathname === '/test-audio' || // Add test page exception
+    pathname === '/supabase-test' // Add supabase test page exception
   ) {
     return NextResponse.next();
   }
