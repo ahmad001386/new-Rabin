@@ -31,7 +31,8 @@ export async function middleware(request: NextRequest) {
     pathname.startsWith('/public') ||
     pathname === '/login' ||
     pathname === '/favicon.ico' ||
-    pathname === '/'
+    pathname === '/' ||
+    pathname === '/test-audio' // Add test page exception
   ) {
     return NextResponse.next();
   }
