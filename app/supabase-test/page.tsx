@@ -1,27 +1,47 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { testConnection } from '/app/lib/database';
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase configuration
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+// Create Supabase client
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export default function SupabaseTest() {
   const [connectionStatus, setConnectionStatus] = useState<'testing' | 'success' | 'error'>('testing');
   const [message, setMessage] = useState('در حال تست اتصال...');
 
   useEffect(() => {
-    testConnection()
-      .then(success => {
-        if (success) {
-          setConnectionStatus('success');
-          setMessage('✅ اتصال به Supabase با موفقیت برقرار شد!');
-        } else {
+    async function testConnection() {
+      try {
+        const { data, error } = await supabase
+          .from('users')
+          .select('count')
+          .limit(1);
+        
+        if (error && error.code !== 'PGRST116') { // PGRST116 is "relation does not exist"
+          console.error('❌ Supabase connection failed:', error.message);
           setConnectionStatus('error');
-          setMessage('❌ اتصال به Supabase با خطا مواجه شد');
+          setMessage(`❌ خطا در اتصال: ${error.message}`);
+          return false;
         }
-      })
-      .catch(error => {
+        
+        console.log('✅ Supabase connection successful!');
+        setConnectionStatus('success');
+        setMessage('✅ اتصال به Supabase با موفقیت برقرار شد!');
+        return true;
+      } catch (error) {
+        console.error('❌ Supabase connection failed:', error);
         setConnectionStatus('error');
-        setMessage(`❌ خطا در اتصال: ${error.message}`);
-      });
+        setMessage(`❌ خطا در اتصال: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        return false;
+      }
+    }
+
+    testConnection();
   }, []);
 
   return (
