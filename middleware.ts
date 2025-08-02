@@ -57,7 +57,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // For API routes (except auth), verify token and add user info to headers
-  if (pathname.startsWith('/api') && !pathname.startsWith('/api/auth')) {
+  if (pathname.startsWith('/api') && !pathname.startsWith('/api/auth') && !pathname.startsWith('/api/voice-analysis')) {
     const token = request.headers.get('authorization')?.replace('Bearer ', '') ||
       request.cookies.get('auth-token')?.value;
 
