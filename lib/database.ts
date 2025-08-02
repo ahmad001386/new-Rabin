@@ -1,25 +1,15 @@
-import mysql from 'mysql2/promise';
+import { createClient } from '@supabase/supabase-js';
 
-// Database connection configuration
-const dbConfig = {
-  host: 'localhost',
-  user: 'root',
-  password: '1234',
-  database: 'crm_system',
-  timezone: '+00:00',
-  charset: 'utf8mb4',
-};
+// Supabase configuration - رایگان و remote قابل دسترسی
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://your-project.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'your-anon-key';
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'your-service-key';
 
-// Create connection pool for better performance
-export const pool = mysql.createPool({
-  ...dbConfig,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
-  // Remove invalid options that cause warnings
-  // acquireTimeout: 60000,
-  // timeout: 60000,
-});
+// Create Supabase client for client-side operations
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+// Create Supabase admin client for server-side operations
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
 // Test database connection
 export async function testConnection() {
