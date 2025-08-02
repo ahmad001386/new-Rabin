@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { testConnection } from '../../lib/database';
+import { testConnection } from '/app/lib/database';
 
 export default function SupabaseTest() {
   const [connectionStatus, setConnectionStatus] = useState<'testing' | 'success' | 'error'>('testing');
